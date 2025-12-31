@@ -29,7 +29,7 @@ public class SmsAuthenticationProvider implements AuthenticationProvider {
             throw new AuthenticationServiceException("验证码错误");
         }
         UserDetails userDetails = dbUserDetailsManager.loadUserByPhone(authentication.getName());
-        SmsAuthenticationToken smsAuthenticationToken = SmsAuthenticationToken.authenticated(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
+        SmsAuthenticationToken smsAuthenticationToken = SmsAuthenticationToken.authenticated(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
         smsAuthenticationToken.setDetails(authentication.getDetails());
         return smsAuthenticationToken;
     }

@@ -119,7 +119,9 @@ public class LoginController {
         BoundValueOperations<String, String> stringBoundValueOperations = stringRedisTemplate.boundValueOps(RedisConstant.getSmsCodeKey("lll"));
         System.out.println("lineCaptcha.getCode() = " + lineCaptcha.getCode().toLowerCase());
         System.out.println(lineCaptcha.getCode().getBytes().length);
-        stringBoundValueOperations.set(lineCaptcha.getCode(), 5 * 60, TimeUnit.SECONDS);
+        // todo: 开发阶段验证码固定为123456
+//        stringBoundValueOperations.set(lineCaptcha.getCode(), 5 * 60, TimeUnit.SECONDS);
+        stringBoundValueOperations.set("123456", 5 * 60, TimeUnit.SECONDS);
         lineCaptcha.write(response.getOutputStream());
     }
 

@@ -37,6 +37,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
@@ -118,12 +119,12 @@ public class SecurityConfig {
                 .requestMatchers("/login","/login/**", "/login.html", "/smsLogin/**").permitAll()
                 .requestMatchers("/lll/auth/**").permitAll()
                 .requestMatchers("/hello/**").permitAll()
+                .requestMatchers(("/smsLogin")).permitAll()
                 .anyRequest().authenticated()
         );
         http.csrf(AbstractHttpConfigurer::disable);
-//        http.cors(AbstractHttpConfigurer::disable);
 
-//        http.addFilterBefore(smsAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(smsAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // 用户名密码登录
         http.formLogin((fromLogin) -> fromLogin
@@ -132,6 +133,7 @@ public class SecurityConfig {
                 .successHandler(loginSuccessHandler)
                 .failureHandler(loginFailureHandler)
                 .permitAll());
+        // todo: 可以考虑升级为自定义登录接口，禁用默认的formLogin
 //        http.formLogin(AbstractHttpConfigurer::disable);
         // 三方oauth2登录
 //        http.oauth2Login(oauth2Login -> oauth2Login
@@ -143,10 +145,13 @@ public class SecurityConfig {
 
 
     @Bean
-    public SmsAuthenticationFilter smsAuthenticationFilter(DBUserDetailsManager dbUserDetailsManager, StringRedisTemplate stringBoundValueOperations) {
+    public SmsAuthenticationFilter smsAuthenticationFilter(DBUserDetailsManager dbUserDetailsManager,
+                                                           StringRedisTemplate stringBoundValueOperations,
+                                                           LoginSuccessHandler loginSuccessHandler) {
         SmsAuthenticationFilter smsAuthenticationFilter = new SmsAuthenticationFilter();
         smsAuthenticationFilter.setAuthenticationManager(new ProviderManager(new SmsAuthenticationProvider(dbUserDetailsManager, stringBoundValueOperations)));
         smsAuthenticationFilter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
+        smsAuthenticationFilter.setAuthenticationSuccessHandler(loginSuccessHandler);
         return smsAuthenticationFilter;
     }
 
@@ -258,9 +263,10 @@ public class SecurityConfig {
             System.out.println("securityUser = " + securityUser);
             context.getClaims()
                     .claim("user_id", securityUser.getId())
-                    .claim("username", securityUser.getUsername())
-                    .claim("phone", securityUser.getPhone())
-                    .claim("email", securityUser.getEmail());
+                    .claim("username", securityUser.getUsername());
+                    // claim 不可为空，下面字段在数据库中可能为null
+//                    .claim("phone", securityUser.getPhone())
+//                    .claim("email", securityUser.getEmail());
 
         };
     }

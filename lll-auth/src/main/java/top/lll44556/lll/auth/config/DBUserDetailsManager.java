@@ -92,14 +92,15 @@ public class DBUserDetailsManager implements UserDetailsManager {
         }
         authorities.add(new SimpleGrantedAuthority("openid"));
         authorities.add(new SimpleGrantedAuthority("profile"));
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.getEnabled() == 1,
-                true,
-                true,
-                true,
-                authorities
-        );
+//        return new org.springframework.security.core.userdetails.User(
+//                user.getUsername(),
+//                user.getPassword(),
+//                user.getEnabled() == 1,
+//                true,
+//                true,
+//                true,
+//                authorities
+//        );
+        return new SecurityUser(user, authorities);
     }
 }
