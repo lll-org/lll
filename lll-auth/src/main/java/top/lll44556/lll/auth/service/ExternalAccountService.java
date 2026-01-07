@@ -1,5 +1,7 @@
 package top.lll44556.lll.auth.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import top.lll44556.lll.auth.entity.ExternalAccount;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -10,4 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface ExternalAccountService extends IService<ExternalAccount> {
 
+    void saveExternalAccount() throws JsonProcessingException;
 }

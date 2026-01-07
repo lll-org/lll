@@ -24,6 +24,8 @@ import org.springframework.security.web.server.authentication.logout.SecurityCon
 import org.springframework.security.web.server.authentication.logout.ServerLogoutHandler;
 import org.springframework.security.web.server.authentication.logout.WebSessionServerLogoutHandler;
 import org.springframework.security.web.server.savedrequest.NoOpServerRequestCache;
+import org.springframework.security.web.server.savedrequest.ServerRequestCache;
+import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 
@@ -31,6 +33,12 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+
+    @Bean
+    public ServerRequestCache serverRequestCache() {
+        return new WebSessionServerRequestCache();
+    }
+
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(

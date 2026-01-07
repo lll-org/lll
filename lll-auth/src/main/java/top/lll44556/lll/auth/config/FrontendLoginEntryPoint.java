@@ -21,8 +21,7 @@ public class FrontendLoginEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         String redirectUrl = request.getRequestURI() + "?" + request.getQueryString();
-//        requestCache.saveRequest(request, response);
+        requestCache.saveRequest(request, response);
         response.sendRedirect("http://192.168.1.100:11001?redirect=" + redirectUrl);
-//        response.sendRedirect("http://auth-ui:5173");
     }
 }

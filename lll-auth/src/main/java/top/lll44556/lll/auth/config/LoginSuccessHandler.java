@@ -26,6 +26,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 //            response.sendRedirect(cont);
 
         String s = objectMapper.writeValueAsString(R.ok());
-         response.getWriter().write(s);
+        response.getWriter().write(s);
     }
 }

@@ -70,40 +70,7 @@ public class LoginController {
 //    }
 
 
-    @PostMapping("/signUp")
-//    @ResponseBody
-    public String signUp(HttpServletRequest request, HttpServletResponse response,  @RequestParam Map<String,String> form) throws IOException {
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = new User();
-        user.setUsername(form.get("username"));
-        user.setPassword(passwordEncoder.encode(form.get("password")));
-        dbUserDetailsManager.createUser(user);
-
-        if (authentication instanceof OAuth2AuthenticationToken oAuth2AuthenticationToken) {
-            OAuth2User principal = oAuth2AuthenticationToken.getPrincipal();
-            System.out.println("principal = " + principal);
-
-            ExternalAccount externalAccount = getExternalAccount(oAuth2AuthenticationToken, principal, user);
-            externalAccountService.save(externalAccount);
-
-            String continueUrl = (String)request.getSession().getAttribute(FederatedLoginSuccessHandler.ATTR_CONTINUE_URL);
-            return "redirect:" + continueUrl;
-        }
-        return "redirect:/";
-    }
-
-    private ExternalAccount getExternalAccount(OAuth2AuthenticationToken oAuth2AuthenticationToken, OAuth2User principal, User user) throws JsonProcessingException {
-        Map<String, Object> attributes = principal.getAttributes();
-        Integer id = (Integer)attributes.get("id");
-        String json = objectMapper.writeValueAsString(attributes);
-        ExternalAccount externalAccount = new ExternalAccount();
-        externalAccount.setId(Long.valueOf(id));
-        externalAccount.setUserId(user.getId());
-        externalAccount.setProvider(oAuth2AuthenticationToken.getAuthorizedClientRegistrationId());
-        externalAccount.setExtraJson(json);
-        return externalAccount;
-    }
 
 
     @GetMapping("/binding")

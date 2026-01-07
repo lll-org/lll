@@ -26,8 +26,10 @@ public class SmsAuthenticationProvider implements AuthenticationProvider {
         String captcha = stringBoundValueOperations.get() == null ? "" : stringBoundValueOperations.get();
         assert captcha != null;
         if (!Objects.equals(captcha.toLowerCase(), authentication.getCredentials().toString().toLowerCase())) {
+            // todo: 编写exceptionHandler处理验证码错误
             throw new AuthenticationServiceException("验证码错误");
         }
+        // loadUserByPhone中，若用户不存在则会创建用户
         UserDetails userDetails = dbUserDetailsManager.loadUserByPhone(authentication.getName());
         SmsAuthenticationToken smsAuthenticationToken = SmsAuthenticationToken.authenticated(userDetails, userDetails.getPassword(), userDetails.getAuthorities());
         smsAuthenticationToken.setDetails(authentication.getDetails());

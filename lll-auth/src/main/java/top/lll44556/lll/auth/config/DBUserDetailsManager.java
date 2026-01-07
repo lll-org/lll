@@ -78,29 +78,23 @@ public class DBUserDetailsManager implements UserDetailsManager {
         return new SecurityUser(user, authorities);
     }
 
+    // 手机号登录，根据手机号获取用户信息；如果用户不存在，则创建新用户
     public UserDetails loadUserByPhone(String phone) {
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(User::getPhone, phone);
         User user = userMapper.selectOne(queryWrapper);
+        // 用户不存在，则创建新用户
         if (user == null) {
-            throw new UsernameNotFoundException(phone);
+            user = new User();
+            user.setUsername(phone);
+            user.setPassword(passwordEncoder.encode(""));
+            user.setPhone( phone);
+            createUser(user);
+
         }
         Collection<GrantedAuthority> authorities = new ArrayList<>();
-        if (user.getUsername().equals("wholike")) {
-//            authorities.add(new SimpleGrantedAuthority("USER_LIST"));
-            authorities.add(new SimpleGrantedAuthority("USER_SAVE"));
-        }
         authorities.add(new SimpleGrantedAuthority("openid"));
         authorities.add(new SimpleGrantedAuthority("profile"));
-//        return new org.springframework.security.core.userdetails.User(
-//                user.getUsername(),
-//                user.getPassword(),
-//                user.getEnabled() == 1,
-//                true,
-//                true,
-//                true,
-//                authorities
-//        );
         return new SecurityUser(user, authorities);
     }
 }

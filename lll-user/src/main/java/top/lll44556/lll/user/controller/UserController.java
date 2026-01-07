@@ -27,8 +27,10 @@ public class UserController {
     public R<UserInfoVo> userInfo(@AuthenticationPrincipal Jwt jwt) {
 
         String username = (String) jwt.getClaim("username");
+        Long userId = (Long) jwt.getClaim("user_id");
         UserInfoVo userInfoVo = new UserInfoVo();
         userInfoVo.setUsername(username);
+        userInfoVo.setId(userId);
 
         return R.ok(userInfoVo);
     }

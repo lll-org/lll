@@ -6,24 +6,30 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -42,18 +48,24 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import top.lll44556.lll.auth.adapter.SecurityUser;
+import top.lll44556.lll.auth.entity.ExternalAccount;
+import top.lll44556.lll.auth.service.ExternalAccountService;
+import top.lll44556.lll.auth.service.UserService;
 import top.lll44556.lll.auth.sms.SmsAuthenticationFilter;
 import top.lll44556.lll.auth.sms.SmsAuthenticationProvider;
+import top.lll44556.lll.auth.sms.SmsAuthenticationToken;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
 
 @Configuration
-
+@AllArgsConstructor
 public class SecurityConfig {
 
 //     统一的 RequestCache：用来拿到 /oauth2/authorize 的 SavedRequest
@@ -63,8 +75,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public FederatedLoginSuccessHandler federatedLoginSuccessHandler(RequestCache requestCache) {
-        return new FederatedLoginSuccessHandler(requestCache);
+    public FederatedLoginSuccessHandler federatedLoginSuccessHandler(RequestCache requestCache, ExternalAccountService externalAccountService) {
+        return new FederatedLoginSuccessHandler(requestCache, externalAccountService);
     }
 
     @Bean
@@ -89,10 +101,7 @@ public class SecurityConfig {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
                 .oidc(Customizer.withDefaults());
-//        http.cors(Customizer.withDefaults());
-        http.securityMatcher(
-                "/oauth2/**"
-        );
+        http.securityMatcher("/oauth2/authorize", "/oauth2/token", "/oauth2/logout", "oauth2/jwks");
 
 
         http.exceptionHandling(ex -> ex
@@ -120,6 +129,7 @@ public class SecurityConfig {
                 .requestMatchers("/lll/auth/**").permitAll()
                 .requestMatchers("/hello/**").permitAll()
                 .requestMatchers(("/smsLogin")).permitAll()
+                .requestMatchers("oauth2").permitAll()
                 .anyRequest().authenticated()
         );
         http.csrf(AbstractHttpConfigurer::disable);
@@ -136,10 +146,9 @@ public class SecurityConfig {
         // todo: 可以考虑升级为自定义登录接口，禁用默认的formLogin
 //        http.formLogin(AbstractHttpConfigurer::disable);
         // 三方oauth2登录
-//        http.oauth2Login(oauth2Login -> oauth2Login
-//                .loginPage(LOGIN_PAGE)
-//                .successHandler(federatedLoginSuccessHandler)
-//                .permitAll());
+        http.oauth2Login(oauth2Login -> oauth2Login
+                .successHandler(federatedLoginSuccessHandler)
+                .permitAll());
         return http.build();
     }
 
@@ -154,9 +163,6 @@ public class SecurityConfig {
         smsAuthenticationFilter.setAuthenticationSuccessHandler(loginSuccessHandler);
         return smsAuthenticationFilter;
     }
-
-
-
 
     // 用于检索用户进行身份验证的 UserDetailsService 实例。
     @Bean
@@ -251,7 +257,7 @@ public class SecurityConfig {
 
     // 用于自定义生成 JWT 令牌，修改JWT的唯一扩展点
     @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer(ExternalAccountService externalAccountService) {
         return context -> {
             // 仅更改access_token令牌
             if (!OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
@@ -259,14 +265,37 @@ public class SecurityConfig {
             }
 
             Authentication principal = context.getPrincipal();
-            SecurityUser securityUser = (SecurityUser) principal.getPrincipal();
-            System.out.println("securityUser = " + securityUser);
-            context.getClaims()
-                    .claim("user_id", securityUser.getId())
-                    .claim("username", securityUser.getUsername());
-                    // claim 不可为空，下面字段在数据库中可能为null
-//                    .claim("phone", securityUser.getPhone())
-//                    .claim("email", securityUser.getEmail());
+
+            // 本地账号密码登录时, 用户密码登录/手机号登录
+            if (principal instanceof UsernamePasswordAuthenticationToken || principal instanceof SmsAuthenticationToken) {
+                SecurityUser securityUser = (SecurityUser) principal.getPrincipal();
+                System.out.println("本地账号登录，认证中心向网关下发token");
+//                System.out.println("securityUser = " + securityUser);
+                context.getClaims()
+                        .claim("user_id", securityUser.getId())
+                        .claim("username", securityUser.getUsername());
+                        // claim 不可为空，下面字段在数据库中可能为null
+//                        .claim("phone", securityUser.getPhone())
+//                        .claim("email", securityUser.getEmail());
+                return;
+            }
+
+            // OAuth2客户端登录时
+            if (principal instanceof OAuth2AuthenticationToken oauth2AuthenticationToken) {
+
+                System.out.println("第三方oauth2登录，认证中心向网关下发token");
+
+                String registrationId = oauth2AuthenticationToken.getAuthorizedClientRegistrationId(); // 获取客户端id
+                OAuth2User oAuth2User = oauth2AuthenticationToken.getPrincipal();
+                Map<String, Object> attributes = oAuth2User.getAttributes();
+                ExternalAccount externalAccount = externalAccountService.getById(Long.valueOf((Integer)attributes.get("id")));
+
+                context.getClaims()
+                        .claim("user_id", externalAccount.getUserId())
+                        .claim("username", attributes.get("login"));
+
+                return;
+            }
 
         };
     }
