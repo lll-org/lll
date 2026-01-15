@@ -68,12 +68,12 @@ spring:
             client-secret: "097b1448316ded58bd926a0ec63595614bee3c7d"
             # client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
-            redirect-uri: "http://192.168.1.100:11001/api/login/oauth2/code/github"
+            redirect-uri: "http://auth.lll44556.top/api/login/oauth2/code/github"
 
           gitee:
             client-id: "e6fdfa345b00e85bf218f833aa4078ded1407fa3e44c1a8b7b0d7825e20c03ee"
             client-secret: "bf136c8eea4e3dfe3a3b803d74f27644fb75663fe948f786e861aad9b72d7597"
-            redirect-uri: "http://192.168.1.100:11001/api/login/oauth2/code/gitee"
+            redirect-uri: "http://auth.lll44556.top/api/login/oauth2/code/gitee"
             authorization-grant-type: authorization_code
             provider: gitee
             scope:

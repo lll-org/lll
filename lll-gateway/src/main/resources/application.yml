@@ -24,7 +24,6 @@ spring:
       forwarded:
         enabled: true
       routes:
-
         #          dmhy-anime服务
         - id: dmhy-anime
           uri: lb://dmhy-anime
@@ -32,6 +31,7 @@ spring:
             - Path=/api/dmhy/anime/**
           filters:
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
+            - TokenRelay
 
         #          第三方服务
         - id: lll-user
@@ -40,6 +40,7 @@ spring:
             - Path=/api/lll/user/**
           filters:
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
+            - TokenRelay
 
 
 
@@ -60,10 +61,10 @@ spring:
         provider:
           sas:
             # 授权服务器地址
-            authorization-uri: http://192.168.1.100:11001/api/oauth2/authorize
+            authorization-uri: http://auth.lll44556.top/api/oauth2/authorize
             # 访问令牌地址
-            token-uri: http://192.168.1.100:11001/api/oauth2/token
-            jwk-set-uri: http://192.168.1.100:11001/api/oauth2/jwks
+            token-uri: http://auth.lll44556.top/api/oauth2/token
+            jwk-set-uri: http://auth.lll44556.top/api/oauth2/jwks
 
 
 
