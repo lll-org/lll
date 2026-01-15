@@ -129,7 +129,7 @@ public class SecurityConfig {
                 .requestMatchers("/lll/auth/**").permitAll()
                 .requestMatchers("/hello/**").permitAll()
                 .requestMatchers(("/smsLogin")).permitAll()
-                .requestMatchers("oauth2").permitAll()
+                .requestMatchers("/oauth2/**").permitAll()
                 .anyRequest().authenticated()
         );
         http.csrf(AbstractHttpConfigurer::disable);
@@ -195,7 +195,7 @@ public class SecurityConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://localhost:10075/login/oauth2/code/oidc-client")
+                .redirectUri("http://home.lll44556.top/login/oauth2/code/oidc-client")
                 .postLogoutRedirectUri("http://localhost:5173")
 //                 不需要id token
                 .scope(OidcScopes.OPENID)

@@ -12,7 +12,7 @@ import java.net.URI;
 @Component
 public class FixedRedirectSuccessHandler implements ServerAuthenticationSuccessHandler {
 
-    private final URI landingUri = URI.create("http://localhost:5174/auth-landing");
+    private final URI landingUri = URI.create("http://dmhy:11003/auth-landing");
 
     public FixedRedirectSuccessHandler() {
     }

@@ -1,4 +1,3 @@
-AUTH_SERVER: http://oauth2-server:10070
 
 server:
   port: 10075
@@ -53,7 +52,7 @@ spring:
             client-secret: "secret"
             #            client-authentication-method: client_secret_basic
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:10075/login/oauth2/code/oidc-client"
+            redirect-uri: "http://home.lll44556.top/login/oauth2/code/oidc-client"
             scope:
               - openid
               - profile

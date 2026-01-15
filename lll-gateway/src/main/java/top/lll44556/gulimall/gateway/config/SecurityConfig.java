@@ -28,6 +28,7 @@ import org.springframework.security.web.server.savedrequest.ServerRequestCache;
 import org.springframework.security.web.server.savedrequest.WebSessionServerRequestCache;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -61,7 +62,12 @@ public class SecurityConfig {
         http.exceptionHandling(exceptions ->
                 exceptions.authenticationEntryPoint(delegating));
         http.requestCache(spec -> spec.requestCache(NoOpServerRequestCache.getInstance()));
-        http.oauth2Login( oAuth2LoginSpec -> oAuth2LoginSpec.authenticationSuccessHandler(fixedRedirectSuccessHandler));
+        http.oauth2Login(
+                oAuth2LoginSpec ->
+                        oAuth2LoginSpec
+                        .authenticationSuccessHandler(fixedRedirectSuccessHandler)
+                        .authenticationFailureHandler(new LoginFailureHandler())
+        );
 
         DelegatingServerLogoutHandler delegatingServerLogoutHandler = new DelegatingServerLogoutHandler(
                 new SecurityContextServerLogoutHandler(),   // 默认：清 SecurityContext

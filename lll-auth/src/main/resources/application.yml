@@ -52,7 +52,7 @@ spring:
                 - "authorization_code"
                 - "refresh_token"
               redirect-uris:
-                - "http://localhost:10075/login/oauth2/code/oidc-client"
+                - "http://home.lll44556.top/login/oauth2/code/oidc-client"
               post-logout-redirect-uris:
                 - "http://localhost:5173/"
               scopes:
