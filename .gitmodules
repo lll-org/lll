@@ -1,0 +1,3 @@
+[submodule "lll-auth"]
+	path = lll-auth
+	url = git@github.com:lll-org/lll-auth.git
