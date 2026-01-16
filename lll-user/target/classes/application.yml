@@ -1,0 +1,38 @@
+server:
+  port: 10071
+
+spring:
+  application:
+    name: lll-user
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.1.100:3306/lll_authority
+    username: root
+    password: lll44556
+
+  config:
+    import: nacos:lll-user.yml?group=user
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.1.100:8848
+        namespace: lll-dev
+      config:
+        server-addr: 192.168.1.100:8848
+        namespace: lll-dev
+
+  session:
+    timeout: 15h
+
+  data:
+    redis:
+      host: 192.168.1.100
+      port: 10010
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://192.168.1.212:10070/oauth2/jwks

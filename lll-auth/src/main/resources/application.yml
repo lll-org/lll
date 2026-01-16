@@ -1,7 +1,0 @@
-spring:
-  application:
-    name: lll-auth
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
-
-
